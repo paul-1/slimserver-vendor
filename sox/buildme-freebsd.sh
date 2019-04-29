@@ -11,6 +11,7 @@ OPUS=1.3.1
 OPUSFILE=0.11
 MAD=0.15.1b
 MAD_SUB="-8"
+LAME=3.100
 WAVPACK=5.1.0
 LOG=$PWD/config.log
 CHANGENO=$(git rev-parse --short HEAD)
@@ -42,6 +43,7 @@ rm -rf libvorbis-$VORBIS
 rm -rf opus-$OPUS
 rm -rf opusfile-$OPUSFILE
 rm -rf libmad-$MAD
+rm -rf lame-$LAME
 rm -rf wavpack-$WAVPACK
 
 ## Start
@@ -111,6 +113,16 @@ echo "Running make"
 gmake -j $CORES >> $LOG
 cd ..
 
+## Build lame
+echo "Untarring lame-$LAME.tar.gz..."
+tar -zxf lame-$LAME.tar.gz
+cd lame-$LAME
+echo "Configuring..."
+./configure --enable-shared=no --with-fileio=lame --enable-nasm >> $LOG
+echo "Running make"
+make -j $CORES >> $LOG
+cd ..
+
 ## Build Wavpack
 echo "Untarring wavpack-$WAVPACK.tar.bz2..."
 tar -jxf wavpack-$WAVPACK.tar.bz2
@@ -132,9 +144,9 @@ patch -p1 < ../02-restore-short-options.patch
 patch -p1 < ../03-version.patch
 echo "Configuring..."
 CC=$CC CXX=$CXX \
-CPF="-I$PWD/../libogg-$OGG/include -I$PWD/../libvorbis-$VORBIS/include -I$PWD/../opus-$OPUS/include -I$PWD/../wavpack-$WAVPACK/include -I$PWD/../flac-$FLAC/include -I$PWD/../libmad-$MAD"
-LDF="-L$PWD/../libogg-$OGG/src/.libs -L$PWD/../libvorbis-$VORBIS/lib/.libs -L$PWD/../opus-$OPUS/.libs -L$PWD/../wavpack-$WAVPACK/src/.libs -L$PWD/../libmad-$MAD/.libs -L$PWD/../flac-$FLAC/src/libFLAC/.libs"
-./configure CFLAGS="$CPF" LDFLAGS="$LDF" OPUS_CFLAGS="-I$PWD/../opusfile-$OPUSFILE/include" OPUS_LIBS="-L$PWD/../opusfile-$OPUSFILE/.libs -lopusfile -lopus" --without-ao --without-pulseaudio --disable-openmp --with-flac --with-oggvorbis --with-opus --with-mp3 --with-wavpack --without-id3tag --without-lame --without-png --without-ladspa --disable-shared --without-oss --without-alsa --disable-symlinks --without-coreaudio --prefix $OUTPUT >> $LOG
+CPF="-I$PWD/../libogg-$OGG/include -I$PWD/../lame-$LAME/include -I$PWD/../libvorbis-$VORBIS/include -I$PWD/../opus-$OPUS/include -I$PWD/../wavpack-$WAVPACK/include -I$PWD/../flac-$FLAC/include -I$PWD/../libmad-$MAD"
+LDF="-L$PWD/../libogg-$OGG/src/.libs -L$PWD/../lame-$LAME/libmp3lame/.libs -L$PWD/../libvorbis-$VORBIS/lib/.libs -L$PWD/../opus-$OPUS/.libs -L$PWD/../wavpack-$WAVPACK/src/.libs -L$PWD/../libmad-$MAD/.libs -L$PWD/../flac-$FLAC/src/libFLAC/.libs"
+./configure CFLAGS="$CPF" LDFLAGS="$LDF" OPUS_CFLAGS="-I$PWD/../opusfile-$OPUSFILE/include" OPUS_LIBS="-L$PWD/../opusfile-$OPUSFILE/.libs -lopusfile -lopus" --without-ao --without-pulseaudio --disable-openmp --with-flac --with-oggvorbis --with-opus --with-mp3 --with-wavpack --without-id3tag --with-lame --without-png --without-ladspa --disable-shared --without-oss --without-alsa --disable-symlinks --without-coreaudio --without-sndfile --prefix $OUTPUT >> $LOG
 echo "Running make"
 gmake -j $CORES >> $LOG
 echo "Running make install"
@@ -151,4 +163,5 @@ rm -rf opusfile-$OPUSFILE
 rm -rf libogg-$OGG
 rm -rf libvorbis-$VORBIS
 rm -rf libmad-$MAD
+rm -rf lame-$LAME
 rm -rf wavpack-$WAVPACK
